@@ -25,6 +25,8 @@ dependencies = [
   "termcolor",
   "accelerate",
   "rich",
+  "transformers",
+  "timm",
 ]
 
 classifiers = [

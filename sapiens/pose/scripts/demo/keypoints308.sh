@@ -5,8 +5,8 @@ cd "$(dirname "$(realpath "$0")")/../.." || exit
 SAPIENS_CHECKPOINT_ROOT="${SAPIENS_CHECKPOINT_ROOT:-${HOME}/sapiens2_host}"
 
 #----------------------------set your input and output directories-------------------------
-INPUT='./demo/data/itw_videos/reel1'
-OUTPUT="${HOME}/Desktop/sapiens2/pose/Outputs/vis/itw_videos/reel1"
+INPUT='../../demo/data'
+OUTPUT="${HOME}/Desktop/sapiens2/pose/Outputs/vis"
 
 #--------------------------MODEL CARD (uncomment one)---------------------------------------
 # MODEL_NAME='sapiens2_0.4b'; CHECKPOINT="${SAPIENS_CHECKPOINT_ROOT}/pose/sapiens2_0.4b_pose.safetensors"
@@ -19,13 +19,11 @@ MODEL="${MODEL_NAME}_keypoints308_${DATASET}-1024x768"
 CONFIG_FILE="configs/keypoints308/${DATASET}/${MODEL}.py"
 OUTPUT="${OUTPUT}/${MODEL_NAME}"
 
-# Person detector (for bbox)
-DETECTION_CONFIG_FILE='tools/vis/rtmdet_m_640-8xb32_coco-person.py'
-DETECTION_CHECKPOINT="${SAPIENS_CHECKPOINT_ROOT}/detector/rtmdet_m.pth"
+DETECTION_CHECKPOINT="${SAPIENS_CHECKPOINT_ROOT}/detector/detr-resnet-101-dc5"
 
 #---------------------------VISUALIZATION PARAMS--------------------------------------------
 LINE_THICKNESS=8
-RADIUS=8
+RADIUS=6
 KPT_THRES=0.3
 
 ##-------------------------------------inference--------------------------------------------
@@ -72,7 +70,6 @@ done
 for ((i=0; i<TOTAL_JOBS; i++)); do
   GPU_ID=${GPU_IDS[$((i % ${#GPU_IDS[@]}))]}
   CMD="CUDA_VISIBLE_DEVICES=${GPU_ID} python ${RUN_FILE} \
-    ${DETECTION_CONFIG_FILE} \
     ${DETECTION_CHECKPOINT} \
     ${CONFIG_FILE} \
     ${CHECKPOINT} \

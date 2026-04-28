@@ -81,3 +81,4 @@ wandb/
 
 # Misc
 .claude/
+*.profraw

@@ -17,12 +17,14 @@ and place them under `$SAPIENS_CHECKPOINT_ROOT` (default: `~/sapiens2_host`).
 
 ### Person Detector
 
-Pose estimation is top-down — it requires bounding boxes from a person detector.
-We use [RTMDet](https://github.com/open-mmlab/mmdetection/tree/main/configs/rtmdet) — download from
-[facebook/sapiens-pose-bbox-detector](https://huggingface.co/facebook/sapiens-pose-bbox-detector)
-and place at `$SAPIENS_CHECKPOINT_ROOT/detector/rtmdet_m.pth`.
+```bash
+hf download facebook/detr-resnet-101-dc5 \
+    --local-dir "${SAPIENS_CHECKPOINT_ROOT}/detector/detr-resnet-101-dc5"
+```
 
 ## Inference Guide
+
+Runs on demo set (`demo/data`, 100 frames) by default:
 
 ```bash
 cd $SAPIENS_ROOT/sapiens/pose
@@ -30,7 +32,7 @@ cd $SAPIENS_ROOT/sapiens/pose
 ```
 
 Open the script and adjust:
-- `INPUT` — path to your image directory
+- `INPUT` — path to your image directory (default: `../../demo/data`)
 - `OUTPUT` — where to save visualizations
 - `MODEL_NAME` — uncomment the model size you want to use
 - `LINE_THICKNESS`, `RADIUS`, `KPT_THRES` — visualization style

@@ -31,13 +31,15 @@ and place them under `$SAPIENS_CHECKPOINT_ROOT` (default: `~/sapiens2_host`).
 
 ## Inference Guide
 
+Runs on demo set (`demo/data`, 100 frames) by default:
+
 ```bash
 cd $SAPIENS_ROOT/sapiens/dense
 ./scripts/demo/seg.sh
 ```
 
 Open the script and adjust:
-- `INPUT` — path to your image directory
+- `INPUT` — path to your image directory (default: `../../demo/data`)
 - `OUTPUT` — where to save visualizations
 - `MODEL_NAME` — uncomment the model size you want to use
 - `JOBS_PER_GPU`, `GPU_IDS` — parallelism (defaults: 3 jobs/GPU on GPUs 0–7)

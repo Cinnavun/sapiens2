@@ -20,7 +20,7 @@
 | Sapiens2-1B   | [facebook/sapiens2-pose-1b](https://huggingface.co/facebook/sapiens2-pose-1b)     |
 | Sapiens2-5B   | [facebook/sapiens2-pose-5b](https://huggingface.co/facebook/sapiens2-pose-5b)     |
 
-Person bbox detector (RTMDet): [facebook/sapiens-pose-bbox-detector](https://huggingface.co/facebook/sapiens-pose-bbox-detector) → place at `detector/rtmdet_m.pth`.
+Person bbox detector: [`facebook/detr-resnet-101-dc5`](https://huggingface.co/facebook/detr-resnet-101-dc5).
 
 ## Segmentation (29 body parts)
 
