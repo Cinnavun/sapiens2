@@ -46,3 +46,7 @@ include = ["sapiens*"]
 
 [tool.setuptools.package-data]
 "*" = ["*.pyi", "*.yaml", "*.yml", "*.json", "*.cfg", "*.txt", "*.md"]
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["win-64"]
