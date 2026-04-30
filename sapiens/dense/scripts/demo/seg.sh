@@ -5,8 +5,8 @@ cd "$(dirname "$(realpath "$0")")/../.." || exit
 SAPIENS_CHECKPOINT_ROOT="${SAPIENS_CHECKPOINT_ROOT:-${HOME}/sapiens2_host}"
 
 #----------------------------set your input and output directories-------------------------
-INPUT='./demo/data/itw_videos/reel1'
-OUTPUT="${HOME}/Desktop/sapiens2/seg/Outputs/vis/itw_videos/reel1"
+INPUT='../../demo/data'
+OUTPUT="${HOME}/Desktop/sapiens2/seg/Outputs/vis"
 
 #--------------------------MODEL CARD (uncomment one)---------------------------------------
 # MODEL_NAME='sapiens2_0.4b'; CHECKPOINT="${SAPIENS_CHECKPOINT_ROOT}/seg/sapiens2_0.4b_seg.safetensors"

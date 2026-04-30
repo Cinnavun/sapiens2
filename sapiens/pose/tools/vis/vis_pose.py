@@ -6,64 +6,58 @@
 
 import json
 import os
-import sys
 from argparse import ArgumentParser
-
-# Block mmpretrain: mmdet's reid modules try `import mmpretrain` inside
-# try/except ImportError, but mmpretrain's BLIP language_model.py raises
-# TypeError (transformers API drift) — escapes the except and kills the process.
-# We don't use reid or mmpretrain, so force a clean ImportError.
-sys.modules["mmpretrain"] = None
 
 import cv2
 import numpy as np
 import torch
 import torch.nn.functional as F
+from PIL import Image
 from sapiens.pose.datasets import parse_pose_metainfo, UDPHeatmap
 from sapiens.pose.evaluators import nms
 from sapiens.pose.models import init_model
 from tqdm import tqdm
+from transformers import DetrForObjectDetection, DetrImageProcessor
 
 from pose_render_utils import visualize_keypoints
 
-try:
-    from mmdet.apis import inference_detector, init_detector
-
-    has_mmdet = True
-except (ImportError, ModuleNotFoundError):
-    has_mmdet = False
+# DETR — COCO person = label 1.
+_detector_cache: dict = {}
 
 
-def mmdet_pipeline(cfg):
-    from mmdet.datasets import transforms
-
-    if "test_dataloader" not in cfg:
-        return cfg
-    pipeline = cfg.test_dataloader.dataset.pipeline
-    for trans in pipeline:
-        if trans["type"] in dir(transforms):
-            trans["type"] = "mmdet." + trans["type"]
-    return cfg
-
-
-def process_one_image(args, image, detector, model):
-    image_w, image_h = image.shape[1], image.shape[0]
-    det_result = inference_detector(detector, image)
-    pred_instance = det_result.pred_instances.cpu().numpy()
-    bboxes = np.concatenate(
-        (pred_instance.bboxes, pred_instance.scores[:, None]), axis=1
-    )
-    bboxes = bboxes[
-        np.logical_and(
-            pred_instance.labels == 0,  ## 0 is the person class
-            pred_instance.scores > args.bbox_thr,
+def _get_detector(device, ckpt_dir):
+    if "model" not in _detector_cache:
+        _detector_cache["proc"] = DetrImageProcessor.from_pretrained(ckpt_dir)
+        _detector_cache["model"] = (
+            DetrForObjectDetection.from_pretrained(ckpt_dir).eval().to(device)
         )
-    ]
+    return _detector_cache["proc"], _detector_cache["model"]
 
-    bboxes = bboxes[nms(bboxes, args.nms_thr), :4]  ## B x 4; x1, y1, x2, y2
-    # get bbox from the image size
-    if bboxes is None or len(bboxes) == 0:
-        bboxes = np.array([[0, 0, image_w - 1, image_h - 1]], dtype=np.float32)
+
+def _detect_persons(image_bgr: np.ndarray, args) -> np.ndarray:
+    proc, model = _get_detector(args.device, args.det_checkpoint)
+    image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
+    pil_img = Image.fromarray(image_rgb)
+    inputs = proc(images=pil_img, return_tensors="pt").to(args.device)
+    with torch.no_grad():
+        outputs = model(**inputs)
+    target_sizes = torch.tensor([image_rgb.shape[:2]], device=args.device)
+    results = proc.post_process_object_detection(
+        outputs, target_sizes=target_sizes, threshold=args.bbox_thr
+    )[0]
+    person_mask = results["labels"] == 1
+    boxes = results["boxes"][person_mask].cpu().numpy()
+    scores = results["scores"][person_mask].cpu().numpy().reshape(-1, 1)
+    bboxes = np.concatenate([boxes, scores], axis=1)
+    bboxes = bboxes[nms(bboxes, args.nms_thr), :4]  # B x 4; x1, y1, x2, y2
+    if len(bboxes) == 0:
+        h, w = image_rgb.shape[:2]
+        bboxes = np.array([[0, 0, w - 1, h - 1]], dtype=np.float32)
+    return bboxes
+
+
+def process_one_image(args, image, model):
+    bboxes = _detect_persons(image, args)
 
     inputs_list = []
     data_samples_list = []
@@ -112,8 +106,7 @@ def process_one_image(args, image, detector, model):
 # -------------------------------------------------------------------------------
 def main():
     parser = ArgumentParser()
-    parser.add_argument("det_config", help="Config file for detection")
-    parser.add_argument("det_checkpoint", help="Checkpoint file for detection")
+    parser.add_argument("det_checkpoint", help="Local DETR snapshot directory")
     parser.add_argument("config", help="Config file")
     parser.add_argument("checkpoint", help="Checkpoint file")
     parser.add_argument("--input", help="Input image dir")
@@ -162,9 +155,8 @@ def main():
     assert codec_type == "UDPHeatmap", "Only support UDPHeatmap"
     model.codec = UDPHeatmap(**model.cfg.codec)
 
-    # build detector
-    detector = init_detector(args.det_config, args.det_checkpoint, device=args.device)
-    detector.cfg = mmdet_pipeline(detector.cfg)
+    # warm up the bbox detector (loads from args.det_checkpoint)
+    _get_detector(args.device, args.det_checkpoint)
 
     # Get image list
     if os.path.isdir(args.input):
@@ -190,7 +182,7 @@ def main():
 
         try:
             keypoints, keypoint_scores, bboxes = process_one_image(
-                args, image, detector, model
+                args, image, model
             )
         except Exception as e:
             print(f"[vis_pose] inference failed on {image_name}: {e}")

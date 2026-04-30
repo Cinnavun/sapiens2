@@ -30,6 +30,15 @@
    </a>
 </p>
 
+<p align="center">
+  <img src="./docs/assets/01.gif" alt="01" title="01" width="400"/>
+  <img src="./docs/assets/03.gif" alt="03" title="03" width="400"/>
+</p>
+<p align="center">
+  <img src="./docs/assets/02.gif" alt="02" title="02" width="400"/>
+  <img src="./docs/assets/04.gif" alt="04" title="04" width="400"/>
+</p>
+
 A family of high-resolution transformers pretrained on 1 billion human images, achieving state-of-the-art performance across diverse human-centric tasks — pose estimation, body-part segmentation, surface normals, and pointmaps.
 
 ## ⚡ Quick Start
@@ -96,8 +105,8 @@ sapiens2_host/
 │   └── sapiens2_{0.4b,0.8b,1b,5b}_normal.safetensors
 ├── pointmap/
 │   └── sapiens2_{0.4b,0.8b,1b,5b}_pointmap.safetensors
-└── detector/
-    └── rtmdet_m.pth          # bbox detector for pose (RTMDet)
+└── detector/                  # [optional] only needed for pose inference
+    └── detr-resnet-101-dc5/
 ```
 
 ## 🎯 Vision Tasks
