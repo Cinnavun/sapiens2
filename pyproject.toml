@@ -52,3 +52,6 @@ include = ["sapiens*"]
 [tool.pixi.workspace]
 channels = ["conda-forge"]
 platforms = ["win-64"]
+
+[tool.pixi.dependencies]
+python = "<3.13"
